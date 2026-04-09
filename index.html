@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  margin: 0;
+  background: black;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+}
+</style>
+</head>
+<body>
+
+<script>
+let numberOfStars = 100000; // 👈 هنا تتحكم في العدد
+
+for (let i = 0; i < numberOfStars; i++) {
+  let star = document.createElement("div");
+  star.className = "star";
+
+  star.style.top = Math.random() * window.innerHeight + "px";
+  star.style.left = Math.random() * window.innerWidth + "px";
+
+  document.body.appendChild(star);
+}
+</script>
+
+</body>
+</html>
