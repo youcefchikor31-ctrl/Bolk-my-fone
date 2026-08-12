@@ -1,36 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-<style>
-body {
-  margin: 0;
-  background: black;
-  overflow: hidden;
-}
-
-.star {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: white;
-}
-</style>
+    <title>اختبار التعليق</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            background-color: red; /* لون أحمر لتنبيه التعليق */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 50px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
-<script>
-let numberOfStars = 100000; // 👈 هنا تتحكم في العدد
+    <div id="msg">سيتم تجميد المتصفح الآن...</div>
 
-for (let i = 0; i < numberOfStars; i++) {
-  let star = document.createElement("div");
-  star.className = "star";
+    <script>
+        // إيقاف أي تفاعل مع الصفحة
+        document.body.style.pointerEvents = "none";
 
-  star.style.top = Math.random() * window.innerHeight + "px";
-  star.style.left = Math.random() * window.innerWidth + "px";
-
-  document.body.appendChild(star);
-}
-</script>
-
+        // تأخير بسيط ليبدأ التعليق بعد ثانية
+        setTimeout(() => {
+            document.getElementById('msg').innerText = "تم التجميد!";
+            
+            // حلقة لا نهائية تستهلك المعالج بالكامل
+            // سيؤدي هذا لتوقف الصفحة عن الاستجابة فوراً
+            while (true) {
+                console.log("تعليق...");
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
