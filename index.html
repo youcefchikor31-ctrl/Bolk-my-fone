@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار معالجة الرسوميات المتقدم</title>
+    <title>هندسة فوضوية معقدة جداً</title>
     <style>
         body, html {
             margin: 0;
-            padding: 0;
+            padding: 0.0;
             width: 100%;
             height: 100%;
             overflow: hidden;
@@ -26,17 +26,15 @@
 
     <script>
         const canvas = document.getElementById('glCanvas');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        const gl = canvas.getContext('webgl');
 
         if (!gl) {
             alert('متصفحك لا يدعم WebGL');
         }
 
-        // ضبط حجم الشاشة ليتطابق مع دقة الجهاز الكاملة
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // Vertex Shader بسيط لتغطية الشاشة بالكامل
         const vertexShaderSource = `
             attribute vec2 a_position;
             void main() {
@@ -44,36 +42,47 @@
             }
         `;
 
-        // Fragment Shader معقد للغاية لتنفيذ حسابات رياضية لكل بكسل
+        // Fragment Shader معقد للغاية يعتمد على تداخل الأشكال الهندسية وألوان الطيف الكاملة
         const fragmentShaderSource = `
             precision highp float;
             uniform vec2 u_resolution;
             uniform float u_time;
 
-            void main() {
-                vec2 st = gl_FragCoord.xy / u_resolution.xy;
-                vec2 p = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
-                
-                float t = u_time * 0.5;
-                vec3 color = vec3(0.0);
+            // دالة لتوليد جميع ألوان الطيف بناءً على الإحداثيات والوقت
+            vec3 palette(float t) {
+                vec3 a = vec3(0.5, 0.5, 0.5);
+                vec3 b = vec3(0.5, 0.5, 0.5);
+                vec3 c = vec3(1.0, 1.0, 1.0);
+                vec3 d = vec3(0.263, 0.416, 0.557);
+                return a + b * cos(6.28318 * (c * t + d));
+            }
 
-                // حلقات تكرارية مكثفة داخل الـ Shader لزيادة الضغط على الـ GPU
-                for(int i = 1; i < 20; i++) {
-                    float fi = float(i);
-                    p.x += sin(p.y + t + fi) / (fi * 0.5);
-                    p.y += cos(p.x + t + fi) / (fi * 0.5);
+            void main() {
+                vec2 uv = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+                vec2 uv0 = uv;
+                vec3 finalColor = vec3(0.0);
+
+                // تكرار الشكل هندسياً داخل بعضه البعض (أنماط متداخلة كثيرة جداً)
+                for (float i = 0.0; i < 4.0; i++) {
+                    uv = fract(uv * 1.5) - 0.5;
+
+                    float d = length(uv) * exp(-length(uv0));
+
+                    // حساب الألوان الطيفية بناءً على المسافة والزمن
+                    vec3 col = palette(length(uv0) + i * 0.4 + u_time * 0.4);
+
+                    // إضافة زوايا ومعادلات جيبية مكثفة لتوليد الخطوط والنقاط
+                    d = sin(d * 12.0 + u_time) / 8.0;
+                    d = abs(d);
+                    d = pow(0.01 / d, 1.2);
+
+                    finalColor += col * d;
                 }
 
-                color = vec3(sin(p.x) * 0.5 + 0.5, cos(p.y) * 0.5 + 0.5, sin(p.x + p.y) * 0.5 + 0.5);
-                
-                // إضافة طبقة تداخل معقدة
-                color += sin(color * t * 2.0);
-
-                gl_FragColor = vec4(color, 1.0);
+                gl_FragColor = vec4(finalColor, 1.0);
             }
         `;
 
-        // دالة لإنشاء وربط الـ Shaders
         function createShader(gl, type, source) {
             const shader = gl.createShader(type);
             gl.shaderSource(shader, source);
@@ -90,7 +99,6 @@
         gl.linkProgram(program);
         gl.useProgram(program);
 
-        // إحداثيات المربع الذي يغطي الشاشة
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         const positions = new Float32Array([
@@ -108,21 +116,19 @@
         gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
         const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
-        const timeLocation = gl.getUniformLocation(program, "u_uniform_time"); // تعمدنا جعلها أو تمرير الوقت
+        const timeLocation = gl.getUniformLocation(program, "u_time");
 
         let startTime = Date.now();
 
-        // حلقة التحديث المستمرة (Render Loop)
         function render() {
             let currentTime = (Date.now() - startTime) * 0.001;
 
             gl.viewport(0, 0, canvas.width, canvas.height);
             gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
-            gl.uniform1f(gl.getUniformLocation(program, "u_time"), currentTime);
+            gl.uniform1f(timeLocation, currentTime);
 
             gl.drawArrays(gl.TRIANGLES, 0, 6);
-            
-            // طلب الإطار التالي فوراً دون توقف لزيادة الضغط إلى أقصى حد
+
             requestAnimationFrame(render);
         }
 
